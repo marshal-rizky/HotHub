@@ -252,8 +252,13 @@ Thick smoke hides fires from the satellite, so a low count under smoke is not go
 
 ### 6.11 Known limits
 
-- Only Suomi NPP is calibrated. NOAA-20 and NOAA-21 have no training years before 2020, so they are
-  not converted yet. If Suomi NPP stops, the series stops until that is done.
+- **Only Suomi NPP is calibrated.** We tried NOAA-20 against Aqua (train 2020 to 2021, test 2022). Neither
+  model beat the baseline, so it fails C1 and stays uncalibrated. Its estimates for 2023 to 2026 are 13%
+  to 27% too low. The likely reason is that 2020 to 2022 were all quiet fire years, so the fit never saw
+  large fires. If Suomi NPP stops, the series stops until this is solved.
+- A way forward, not built: raw NOAA-20 and Suomi NPP counts agree closely in full years (ratio 0.98 to
+  1.06 for 2020, 2021, 2023, 2025, 2026), so NOAA-20 could be converted to Suomi NPP first and then
+  through the tested model.
 - No cloud data. A cloudy month can look quiet. The smoke flag does not cover cloud.
 - Aerosol optical depth comes from a model product, not a direct measurement, and one time of day.
 - Aqua after 2022 drifts in overpass time, so "Aqua observed" in those years is itself changing.
@@ -298,6 +303,6 @@ Haze now and fires in the last 24 hours near a place, in plain words.
 
 ## 8. Open items
 
-- Calibrate NOAA-20 against Aqua on 2020 to 2022, and say clearly that it has no independent test.
+- NOAA-20 standby through Suomi NPP (see 6.11). The direct calibration was tried and failed C1.
 - Landsat cross-check with the FIRMS key (works for past dates; coverage is limited).
 - Decide the public host and confirm it serves gzip (the pack is 6 MB, 1.7 MB gzipped).

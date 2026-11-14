@@ -108,3 +108,7 @@ def test_estimates_and_region_series_cover_months_without_aqua():
     assert est[(0, 0, 2030, 1)][0] == 100 and abs(est[(0, 0, 2030, 1)][1] - 20) < 1
     last = h.region_series(bm, sm, est, intervals["monthly"])[-1]
     assert (last["year"], last["aqua"]) == (2030, None) and last["lo"] <= last["est"] <= last["hi"]
+
+
+def test_year_range():
+    assert list(h.year_range("2020-2021")) == [2020, 2021] and list(h.year_range("2022")) == [2022]

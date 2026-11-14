@@ -29,7 +29,9 @@ Done:
   file. Format in PACK.md.
 - Team plan in TEAM.md.
 
-Not done yet: the web page, NOAA-20 calibration, deploy, slides, project page text.
+Tried and failed: direct NOAA-20 calibration (fails C1, see DESIGN.md 6.11).
+
+Not done yet: the web page, deploy, slides, project page text.
 
 Things that went wrong and what we changed:
 

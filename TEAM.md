@@ -38,7 +38,7 @@ Stay in your folders. That is what keeps four people from breaking each other's 
 
 ## B: web page
 
-Can start now with the sample pack. No need to wait for real data.
+Full specification: [WEB-SPEC.md](WEB-SPEC.md). The real pack is already in `web/data/sea/`.
 
 1. Skeleton in `web/`: map, draw a box, type latitude and longitude.
 2. Monthly calendar (year by month) of hot spot counts for the chosen area.
@@ -50,7 +50,7 @@ Can start now with the sample pack. No need to wait for real data.
 
 ## C: content and science writing
 
-Does not depend on code. Start now.
+Full specification: [CONTENT-SPEC.md](CONTENT-SPEC.md). Does not depend on code. Start now.
 
 1. Reference list. Every source must be cited: NASA GIBS, NASA FIRMS, Meteomatics, Open-Meteo, the map
    library, map tiles, fonts, icons. Missing citations can cost an award.

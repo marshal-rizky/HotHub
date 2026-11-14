@@ -361,28 +361,40 @@ def print_report(report):
     print("chosen: {}  (page uses {}, calibrated={})".format(report["chosen"], report["used"], report["calibrated"]))
 
 
+def year_range(text):
+    a, _, b = text.partition("-")
+    return range(int(a), int(b or a) + 1)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--region", choices=sorted(grid.REGIONS), required=True)
     ap.add_argument("--out", default="data/out")
     ap.add_argument("--sat", default="N", choices=grid.VIIRS_SATS)
+    ap.add_argument("--train", default=None, help="training years, for example 2020-2021 (default 2012-2019)")
+    ap.add_argument("--test", default=None, help="test years, for example 2022 (default 2020-2022)")
     args = ap.parse_args()
+    train = year_range(args.train) if args.train else TRAIN_YEARS
+    test = year_range(args.test) if args.test else TEST_YEARS
+    drift = range(max(DRIFT_YEARS[0], test[-1] + 1), DRIFT_YEARS[-1] + 1)
+    # Only the default run (Suomi NPP, default years) writes the files the pack reads.
+    suffix = "" if (args.sat, train, test) == ("N", TRAIN_YEARS, TEST_YEARS) else f"_{args.sat}"
     out = Path(args.out) / args.region
     blockmonths = celldays.read_blockmonths(out / "blockmonths.csv")
     satmonths = celldays.read_satmonths(out / "satmonths.csv")
-    report, fitted, intervals = run(blockmonths, satmonths, args.sat)
+    report, fitted, intervals = run(blockmonths, satmonths, args.sat, train, test, drift)
     print_report(report)
     model, iv = fitted[report["used"]], intervals[report["used"]]
     est = estimates(blockmonths, satmonths, args.sat, model)
     report["series"] = region_series(blockmonths, satmonths, est, iv)
     report["criteria_definition"] = {"C1_factor": C1_FACTOR, "C2_range": C2_RANGE, "C3_limit": C3_LIMIT}
-    (out / "harmonize.json").write_text(json.dumps(report, indent=1), encoding="utf-8")
-    with (out / "harmonized.csv").open("w", newline="", encoding="utf-8") as fh:
+    (out / f"harmonize{suffix}.json").write_text(json.dumps(report, indent=1), encoding="utf-8")
+    with (out / f"harmonized{suffix}.csv").open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["bi", "bj", "year", "month", "sat", "viirs", "est"])
         for (bi, bj, y, m), (x, hat) in sorted(est.items()):
             w.writerow([bi, bj, y, m, args.sat, x, round(hat, 2)])
-    print("wrote {} and {} block-months to {}".format(out / "harmonize.json", len(est), out / "harmonized.csv"))
+    print("wrote harmonize{0}.json and {1} block-months to harmonized{0}.csv in {2}".format(suffix, len(est), out))
 
 
 if __name__ == "__main__":
