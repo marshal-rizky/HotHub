@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+# Data is large; it is rebuilt by the pipeline and published as a release asset.
+data/
+web/data/
