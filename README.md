@@ -44,7 +44,6 @@ section 6.11.
 | [TEAM.md](TEAM.md) | Who does what, in what order, and the hand-offs |
 | [PACK.md](PACK.md) | Format of the data pack the page reads |
 | [WEB-SPEC.md](WEB-SPEC.md) | Full specification of the web page (person B) |
-| [CONTENT-SPEC.md](CONTENT-SPEC.md) | Full specification of all written content (person C) |
 
 ## How to run
 

@@ -50,7 +50,7 @@ Full specification: [WEB-SPEC.md](WEB-SPEC.md). The real pack is already in `web
 
 ## C: content and science writing
 
-Full specification: [CONTENT-SPEC.md](CONTENT-SPEC.md). Does not depend on code. Start now.
+Does not depend on code. Start now.
 
 1. Reference list. Every source must be cited: NASA GIBS, NASA FIRMS, Meteomatics, Open-Meteo, the map
    library, map tiles, fonts, icons. Missing citations can cost an award.

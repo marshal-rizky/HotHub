@@ -185,7 +185,7 @@ sentence "Aqua-equivalent hot spots, Aqua MODIS confidence 30 or higher; estimat
 - One chart from `region.json`: raw detections per satellite per year (Suomi NPP, NOAA-20, NOAA-21,
   Terra) stacked, against the Aqua-equivalent series as a line. The point: the stack grows when
   satellites are launched; the line does not.
-- Text comes from C (CONTENT-SPEC.md, item 4). Leave a marked placeholder until it arrives.
+- Text comes from C. Leave a marked placeholder until it arrives.
 
 ### 7.7 Methods (section, not a new page)
 Build the test table from `meta.test`, do not type numbers by hand: one row per model with median log
