@@ -157,7 +157,13 @@ def write_rows(path, rows):
         w = csv.DictWriter(fh, fieldnames=FIELDS)
         w.writeheader()
         w.writerows(rows)
-    os.replace(tmp, path)
+    try:
+        os.replace(tmp, path)
+    except PermissionError:
+        # Windows: another fetch process is writing the same day. Its copy is as good as ours.
+        tmp.unlink(missing_ok=True)
+        if not path.exists():
+            raise
 
 
 def read_rows(path):

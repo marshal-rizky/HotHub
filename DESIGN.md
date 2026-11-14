@@ -1,12 +1,8 @@
-# Project notes: harmonized MODIS and VIIRS hot spots for Indonesia
+# Design: harmonized MODIS and VIIRS hot spots for Indonesia
 
 NASA Space Apps Challenge 2026, challenge "Harmonization of MODIS and VIIRS Hot Spots".
-Written 14 November 2026. Submission deadline: Sunday 15 November 2026, 23:59.
 
-This file collects the analysis, the decisions and the plan in one place. It is a working document:
-the status section at the end says what exists and what does not.
-
-## 1. What the challenge asks for
+## What the challenge asks for
 
 The MODIS instruments (Terra since 2000, Aqua since 2002) are near the end of their life. VIIRS
 (Suomi NPP, NOAA-20, NOAA-21) continues the active fire record, but it sees more and smaller fires, so
@@ -20,7 +16,7 @@ the two records cannot be read as one series. The challenge asks for a tool that
 
 Judging: Impact, Creativity, Validity, Relevance, Presentation (1 to 5 each).
 
-## 2. Our answer in one paragraph
+## Our answer in one paragraph
 
 A web page for Indonesia. The person picks an area and sees monthly hot spot counts from 2002 to today
 as one series in "Aqua-equivalent" units, with an uncertainty interval. Months where MODIS exists show
@@ -28,7 +24,7 @@ the MODIS count. Months where only VIIRS exists show an estimate made from VIIRS
 by hiding MODIS for years where we do have it and rebuilding it from VIIRS alone. The pass or fail
 result of that test is shown on the page, whichever way it goes.
 
-## 3. Objective assessment before building
+## Objective assessment before building
 
 | Criterion | Where we stand | What it needs |
 |---|---|---|
@@ -48,7 +44,7 @@ Other public approaches we looked at for comparison:
 What we take from this: the ratio per calendar month is a fair baseline and we must beat it or say that
 we did not. A hidden-years test is the expected standard of proof.
 
-## 4. Scope decisions
+## Scope decisions
 
 - Region: Indonesia only (bounding box latitude -11 to 8, longitude 94 to 142).
 - Headline unit: hot spots per month, Aqua-equivalent, with an interval. No weekly view.
@@ -57,7 +53,7 @@ we did not. A hidden-years test is the expected standard of proof.
 - Dropped: several areas at once, a second region, MERRA-2, heavy visual polish.
 - Optional if time allows: Landsat cross-check, a compare tab.
 
-## 5. Data sources
+## Data sources
 
 | Source | Use | Access |
 |---|---|---|
@@ -82,7 +78,7 @@ Things we measured or ran into:
 - Meteomatics aerosol data starts on 2015-11-21. The account allows 1000 requests a day and ends on
   2026-11-22, so its data is fetched in the pipeline and stored in the data pack. The page never calls it.
 
-## 6. Method
+## Method
 
 ### Grid and tables
 
@@ -98,11 +94,13 @@ Things we measured or ran into:
 
 ### Two candidate models
 
-1. **Ratio.** Aqua count divided by VIIRS count, per calendar month, per VIIRS satellite, day and night
-   kept apart. This is the baseline.
+1. **Monthly ratio.** Aqua count divided by VIIRS count, per calendar month, per VIIRS satellite, day
+   and night kept apart, pulled towards the overall ratio when a month has little data.
 2. **Isotonic with a fire-size covariate.** A monotone mapping from VIIRS count to Aqua count that also
    uses FRP per detection and the share of high-confidence detections. Small fires are seen by VIIRS and
    missed by MODIS, so the ratio should depend on fire size.
+
+The **baseline** both are measured against is one ratio for the whole record (day and night apart).
 
 Each VIIRS satellite is handled on its own, because the number of VIIRS satellites in orbit changes
 over time and a pooled count would drift with it.
@@ -112,7 +110,8 @@ over time and a pooled count would drift with it.
 - Train on 2012 to 2019.
 - Rebuild 2020 to 2022 from VIIRS alone and compare with the real Aqua counts.
 - Report 2023 onwards on its own, because Aqua's overpass time drifts from 2023.
-- The set of block-months that is scored is fixed without looking at the outcome and includes zeros.
+- The scored set is every block-month where the VIIRS satellite saw a fire. Months where Aqua saw
+  nothing are included, and fires that VIIRS missed count in the real yearly totals.
 
 ### Pass criteria, fixed before seeing results
 
@@ -129,7 +128,7 @@ Thick smoke hides fires from the satellite, so a low count under smoke is not go
 flagged when aerosol optical depth at 550 nm is 1.0 or more. The flag is display only. The page says
 "below normal" only when smoke data exists and the air was clear.
 
-## 7. Web page
+## Web page
 
 - Map with a drawn area, or latitude and longitude entry.
 - Monthly calendar (year by month) of hot spot counts.
@@ -139,45 +138,3 @@ flagged when aerosol optical depth at 550 nm is 1.0 or more. The flag is display
 - Methods page with the test result, pass or fail.
 - Simple cards: haze now, fires in the last 24 hours.
 - Data pack target: under about 8 MiB gzipped. The host must serve gzip.
-
-## 8. Schedule
-
-| When | Work |
-|---|---|
-| Sat afternoon | Monthly tables, two models, MODIS-denial test, aerosol data |
-| Sat evening | Data pack and core page: map, area, lat/lon, calendar, median, date range, CSV |
-| Sat late | Smoke flag, official-figure explainer, Methods page |
-| Sun morning | Simple cards, deploy, Landsat check if time allows |
-| Sun midday | Browser and phone tests, README, citations |
-| Sun 18:00 | Freeze. No new features. Submit before 23:59. |
-
-Split of work: one person on pipeline, model and page; one person on the submission guide requirements,
-project page text, slides or video, and hosting.
-
-## 9. Status on 14 November, afternoon
-
-Done:
-
-- `pipeline/grid.py`: grid, channels, activity rules.
-- `pipeline/fetch.py`: GIBS fetch with a per-day cache, gap and empty-day logs, back-off on network
-  errors, and an audit mode.
-- `pipeline/celldays.py`: monthly tables and persistent heat sources.
-- 24 tests pass (`python -m pytest tests -q`).
-- Fetch is running. Days cached so far, newest first: MODIS 1072, Suomi NPP 801, NOAA-21 773,
-  NOAA-20 224.
-
-Not done yet: the harmonization models and their test, aerosol fetch, data pack, the web page, deploy,
-README. No validation numbers exist yet.
-
-Before fitting: check `gaps.txt`, `failed.txt` and `empty_days.txt`, run `fetch.py --audit`, and run
-the fetch once more to fill days lost to the GIBS outage.
-
-## 10. How to run what exists
-
-```
-python pipeline/fetch.py --region sea --source modis --start 2002-07-04 --end 2026-11-13 --newest-first
-python pipeline/celldays.py --region sea --static-years 2012-2019
-python -m pytest tests -q
-```
-
-Keys go in a `.env` file outside the repository. Nothing in this repository contains a key.

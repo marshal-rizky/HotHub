@@ -6,6 +6,7 @@ Usage:
 Outputs in data/out/<region>/:
     cellmonths.csv    i,j,year,month,<19 channel counts>          what the page sums
     blockmonths.csv   bi,bj,year,month,sat,dn,n_det,n_celldays,frp,n_high   what the harmonizer fits
+                      (persistent heat sources left out)
     satmonths.csv     year,month,sat,days                         days with data per satellite
     static_cells.csv  i,j,years                                   persistent heat sources
 
@@ -43,7 +44,8 @@ def is_high(row):
 
 
 class Tables:
-    def __init__(self):
+    def __init__(self, exclude=()):
+        self.exclude = set(exclude)                               # cells kept out of blockmonths
         self.cellmonths = defaultdict(lambda: [0] * len(grid.CHANNELS))
         self.blockmonths = defaultdict(lambda: [0, 0, 0.0, 0])   # n_det, n_celldays, frp, n_high
         self.sat_days = defaultdict(set)                          # (year, month, sat) -> {date}
@@ -65,6 +67,9 @@ class Tables:
             self.year_days[y].add(day)
             if not qualifies(r):
                 continue
+            self.cell_year_days[(y, i, j)].add(day)
+            if (i, j) in self.exclude:
+                continue
             dn = day_or_night(r["time"], r["lon"])
             rec = self.blockmonths[(*grid.block_of(i, j), y, m, r["sat"], dn)]
             rec[0] += 1
@@ -74,7 +79,6 @@ class Tables:
             if key not in seen_celldays:
                 seen_celldays.add(key)
                 rec[1] += 1
-            self.cell_year_days[(y, i, j)].add(day)
 
     def static_cells(self, years=None, min_share=0.5, min_years=3):
         """{(i, j): n_years}: cells active on at least min_share of a year's data days in at least
@@ -158,14 +162,19 @@ def main():
     ap.add_argument("--static-years", default="2012-2019",
                     help="years used to find persistent heat sources (training years only)")
     args = ap.parse_args()
-    tables, n_rows, n_files = Tables(), 0, 0
-    for source in fetch.LAYERS:
-        for path in sorted((Path(args.root) / args.region / source).glob("*.csv")):
-            rows = fetch.read_rows(path)
-            tables.add_day(rows)
-            n_rows += len(rows)
-            n_files += 1
-    static = tables.static_cells(parse_years(args.static_years))
+    paths = [p for source in fetch.LAYERS
+             for p in sorted((Path(args.root) / args.region / source).glob("*.csv"))]
+    # Pass 1 finds the persistent heat sources, pass 2 builds the tables without them in blockmonths.
+    first = Tables()
+    for path in paths:
+        first.add_day(fetch.read_rows(path))
+    static = first.static_cells(parse_years(args.static_years))
+    del first
+    tables, n_rows, n_files = Tables(exclude=static), 0, len(paths)
+    for path in paths:
+        rows = fetch.read_rows(path)
+        tables.add_day(rows)
+        n_rows += len(rows)
     write_tables(Path(args.out) / args.region, tables, static)
     years = sorted(tables.year_days)
     print(f"{n_files} day files, {n_rows} detections -> {len(tables.cellmonths)} cell-months, "

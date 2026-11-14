@@ -76,3 +76,11 @@ def test_tables_round_trip(tmp_path):
 def test_parse_years():
     assert celldays.parse_years("2012-2014") == {2012, 2013, 2014}
     assert celldays.parse_years("2019") == {2019}
+
+
+def test_excluded_cells_stay_in_cellmonths_but_leave_blockmonths():
+    a = grid.cell_index(0.52, 100.53)
+    t = celldays.Tables(exclude={a})
+    t.add_day([row(), row(lat=0.61)])
+    assert t.cellmonths[(*a, 2015, 9)][grid.CH["vN_nominal"]] == 1
+    assert t.blockmonths[(*grid.block_of(*a), 2015, 9, "N", "D")] == [1, 1, 4.0, 0]
