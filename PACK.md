@@ -70,5 +70,5 @@ For a chosen area and a month `m`:
 ## Current state of the pack
 
 Built on 14 November from a partial record: Aqua and Terra from June 2010 (2002 to 2010 is still being
-fetched), VIIRS from January 2012. No smoke file yet. The format will not change when the full record
+fetched), VIIRS from January 2012. The smoke file is included (from November 2015). The format will not change when the full record
 arrives; only more months appear.
