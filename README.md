@@ -19,7 +19,7 @@ A count is only comparable over time when it is expressed in one unit. Details a
 
 ## Result so far
 
-First run on real data, 14 November 2026. Trained on 2012 to 2019, tested by hiding Aqua for 2020 to
+Run on the full record, 14 November 2026. Trained on 2012 to 2019, tested by hiding Aqua for 2020 to
 2022 and rebuilding it from Suomi NPP alone.
 
 | Model | Median log error | Interval coverage | Yearly total error | Verdict |
@@ -28,8 +28,8 @@ First run on real data, 14 November 2026. Trained on 2012 to 2019, tested by hid
 | Ratio per calendar month | 0.304 | 83% | +9% to +18% | fails C1 |
 | Fire-size curves | 0.270 | 84% | 0% to +10% | passes C1, C2, C3 |
 
-The pass criteria were fixed before the run. The pass on C1 is narrow. The record was not complete at
-the time, so these numbers will be replaced after the rerun. Limits are listed in DESIGN.md, 6.11.
+The pass criteria were fixed before the run. The pass on C1 is narrow. Limits are listed in DESIGN.md,
+section 6.11.
 
 ## Layout
 

@@ -1,7 +1,7 @@
 # Design: harmonized MODIS and VIIRS hot spots for Indonesia
 
 NASA Space Apps Challenge 2026, challenge "Harmonization of MODIS and VIIRS Hot Spots".
-Last updated 14 November 2026. Numbers in section 6.9 come from the first run on real data.
+Last updated 14 November 2026. Numbers in section 6.9 come from the run on the full record.
 
 ## 1. Goal and audience
 
@@ -107,9 +107,9 @@ Rules:
 Tiles are requested in EPSG:4326 at zoom 4. Six tiles cover the bounding box. Detections on tile
 edges appear twice and are removed.
 
-What was fetched (14 November): 14,628 day files, 8.28 million detections. Suomi NPP from 20 January
-2012, NOAA-20 from 1 January 2020, NOAA-21 from 13 August 2024, MODIS from June 2010 so far (2002 to
-2010 still being fetched).
+What was fetched (14 November): 17,536 day files, 9.10 million detections. MODIS (Aqua and Terra) from
+4 July 2002, Suomi NPP from 20 January 2012, NOAA-20 from 1 January 2020, NOAA-21 from 13 August 2024,
+all up to November 2026. No day failed.
 
 Quirks we measured, each handled in `fetch.py`:
 
@@ -209,7 +209,7 @@ residuals uses all residuals together.
 For an area the page sums cell estimates. A cell's estimate is its VIIRS count times the ratio of its
 block's estimate to its block's VIIRS count.
 
-### 6.9 Result of the first run on real data (14 November 2026)
+### 6.9 Test result on the full record (14 November 2026)
 
 Suomi NPP against Aqua. 95,817 training records, 19,336 scored block-months in the test years.
 
@@ -235,8 +235,8 @@ million in 2026, because three VIIRS satellites now fly. In Aqua-equivalent unit
 about 27,000 hot spots and September 2015 about 37,000. Adding satellites together would have called
 2026 twice as bad as 2015.
 
-This is a first run on a partial record. It will be run again when the fetch is complete, and the
-table above will be replaced by whatever comes out.
+The test was first run when MODIS before June 2010 was still missing, and run again on the full
+record. The numbers did not change, as expected: the training and test years were already complete.
 
 ### 6.10 Smoke flag
 
@@ -298,7 +298,6 @@ Haze now and fires in the last 24 hours near a place, in plain words.
 
 ## 8. Open items
 
-- Run everything again on the full record (MODIS from 2002, complete smoke data).
 - Calibrate NOAA-20 against Aqua on 2020 to 2022, and say clearly that it has no independent test.
 - Landsat cross-check with the FIRMS key (works for past dates; coverage is limited).
-- Decide the public host and confirm it serves gzip (the pack is 5 MB, 1.4 MB gzipped).
+- Decide the public host and confirm it serves gzip (the pack is 6 MB, 1.7 MB gzipped).

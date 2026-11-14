@@ -17,21 +17,19 @@ Submission deadline: Sunday 15 November 2026, 23:59 WIB.
 Split of work: one person on pipeline, model and page; one person on the submission guide requirements,
 project page text, slides or video, and hosting.
 
-## Status on 14 November, 16:30
+## Status on 14 November, 17:30
 
 Done:
 
 - `pipeline/fetch.py`, `grid.py`, `celldays.py`, `harmonize.py`, `aod.py`, `pack.py`. 44 tests pass.
-- Detections fetched: Suomi NPP, NOAA-20 and NOAA-21 complete; MODIS from June 2010.
-- First run of the test on real data: the size model passes C1, C2 and C3, the monthly ratio fails
+- All detections fetched: MODIS from July 2002, Suomi NPP, NOAA-20, NOAA-21. Aerosol data fetched.
+- Test run on the full record: the size model passes C1, C2 and C3, the monthly ratio fails
   C1. Numbers are in DESIGN.md section 6.9.
-- First data pack in `web/data/sea/` (5 MB, 1.4 MB gzipped). Format in PACK.md.
+- Data pack on the full record in `web/data/sea/` (293 months, 6 MB, 1.7 MB gzipped), with the smoke
+  file. Format in PACK.md.
 - Team plan in TEAM.md.
 
-Running: aerosol fetch (75 of 132 months done earlier), then MODIS 2002 to mid-2010.
-
-Not done yet: the web page, the smoke file in the pack, the rerun on the full record, NOAA-20
-calibration, deploy, slides, project page text.
+Not done yet: the web page, NOAA-20 calibration, deploy, slides, project page text.
 
 Things that went wrong and what we changed:
 
