@@ -42,6 +42,7 @@ section 6.11.
 | [DESIGN.md](DESIGN.md) | What the challenge asks, data sources, method, pass criteria |
 | [PLAN.md](PLAN.md) | Schedule, status, submission checklist |
 | [TEAM.md](TEAM.md) | Who does what, in what order, and the hand-offs |
+| [HANDOFF.md](HANDOFF.md) | Current state, decisions, traps and next step: read first when picking the work up |
 | [PACK.md](PACK.md) | Format of the data pack the page reads |
 | [WEB-SPEC.md](WEB-SPEC.md) | Full specification of the web page (person B) |
 

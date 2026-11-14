@@ -3,6 +3,10 @@
 This is everything the page must do. The data format is in [PACK.md](PACK.md); the reasons behind the
 numbers are in [DESIGN.md](DESIGN.md). Where this file and PACK.md disagree, tell A before coding.
 
+**Revised 14 November, evening:** the map is now a 3D globe with a time slider, and the page has a
+self-playing demo mode for the 30 second video. Section 15 describes both and overrides the map
+details in sections 3, 5 and 7.2. Everything about numbers (sections 6, 8, 10, 14) is unchanged.
+
 ## 1. Outcome
 
 One static page where a person picks an area in Indonesia and sees, for that area:
@@ -35,10 +39,11 @@ A judge should be able to open the link, click the map once, and understand the 
 | `web/calc.js` | Pure functions only: no DOM, no fetch. Everything in section 6 |
 | `web/data.js` | Loads the four JSON files and builds the cell index |
 | `web/app.js` | Map, events, rendering |
-| `web/vendor/` | Leaflet 1.9.4 (JS and CSS), copied in, with its licence file |
+| `web/vendor/` | MapLibre GL JS (JS and CSS), copied in, with its licence file |
+| `web/map3d.js`, `web/demo.js` | The 3D map layer and the demo tour (section 15) |
 | `web/tests/calc.test.mjs` | Tests for `calc.js`, run with `node --test web/tests` |
 
-Map: Leaflet with OpenStreetMap tiles. Keep the "(c) OpenStreetMap contributors" attribution visible.
+Map: MapLibre GL JS, globe projection (section 15). Keep the attribution of the base map visible.
 
 ## 4. Data loading
 
@@ -59,7 +64,8 @@ Build once after loading:
 
 Three ways, all ending in the same area object:
 
-1. **Draw a box** on the map (press, drag, release).
+1. **Click the map** to set a point; the radius field applies (default 25 km). In top view a box can
+   also be drawn (press, drag, release).
 2. **Type a point and a radius:** latitude, longitude, radius in km (default 25, allowed 5 to 500).
 3. **Preset buttons:** Riau, South Sumatra, Central Kalimantan, West Kalimantan, Papua (south), and
    "All Indonesia" (the whole box). Use simple boxes; exact borders are not needed.
@@ -242,12 +248,13 @@ must equal the `aqua` value in `region.json` for the same month. Reference value
 
 | Step | Done when | Target |
 |---|---|---|
-| 1 | Data loads; presets and typed point work; latest month panel shows the right number | Sat 21:00 |
-| 2 | Box drawing, monthly calendar with marks and tooltip | Sat 23:30 |
+| 1 | Data loads; presets and typed point work; latest month panel shows the right number (flat map is fine) | Sat 21:00 |
+| 2 | Monthly calendar with marks and tooltip | Sat 23:30 |
 | 3 | Date range, chart, CSV | Sun 01:00 |
 | 4 | Smoke sentence, Methods table from `meta.test`, "Why numbers differ" chart | Sun 09:00 |
-| 5 | Phone check, keyboard check, link sharing, texts from C in place | Sun 12:00 |
-| 6 | On the public host; D takes screenshots | Sun 13:00 |
+| 5 | 3D columns, time slider, smoke layer, 2D fallback (section 15) | Sun 11:00 |
+| 6 | Phone check, keyboard check, link sharing, texts from C in place; on the public host | Sun 13:00 |
+| 7 | Demo mode `?demo=1`, recorded at 1080p | Sun 15:00 |
 
 Push after every step, even if rough. D and C need something to look at early.
 
@@ -288,3 +295,76 @@ Use these to check your code. Area: the whole box.
   They are the live example of what happens to every month after MODIS ends. Make sure they look right.
 - Estimates summed from cells differ from `region.json` by a few units because of rounding to one
   decimal per cell. That is expected.
+
+## 15. 3D map, time slider and demo mode
+
+The map is the centre of the page. Numbers stay in flat panels beside it: a calendar, a median and a
+CSV file are read and compared, and 3D makes that harder. The map answers "where and how much"; the
+panels answer "exactly how many, and is that normal".
+
+Build order matters: sections 6 and 7 must work first on a flat map. Then add the layers below.
+
+### 15.1 Globe and base map
+- MapLibre GL JS with globe projection. Check the current MapLibre documentation for the exact API of
+  your version; do not write it from memory.
+- Start centred on Indonesia, pitched about 45 degrees. The person can rotate, tilt and zoom.
+- A **Top view** button sets pitch and bearing to zero. Box drawing is offered only in top view.
+- Base map: try NASA GIBS Blue Marble raster tiles first (it is NASA data and fits the theme). This has
+  not been tested. If it does not work within 30 minutes, use OpenStreetMap raster tiles. Cite
+  whichever is used and tell C.
+
+### 15.2 Hot spot columns
+- One column per 0.1 degree cell for the **selected month**. Height is the cell's headline value for
+  that month (Aqua count, or the estimate where the month has no usable Aqua). Draw nothing for zero.
+- **One height scale for the whole map and the whole record**, shown in a legend. Never rescale per
+  month or per area to make a view look dramatic. Use a square-root scale so small values stay visible,
+  and say so in the legend.
+- Colour: the same five-step scale as the calendar (6.7), computed per cell against the same calendar
+  month in other years. Cells with too little history use a neutral colour.
+- When zoomed far out, merge cells into 0.5 degree blocks (sum the values) so the map stays fast.
+- Draw only the selected month. The pack has about 20,000 cells but a single month has far fewer.
+- Hover or tap a column: place (latitude, longitude), value, source, and the status sentence.
+- Persistent heat sources (`meta.static_cells`) are flat grey markers, never columns.
+
+### 15.3 Time slider
+- A slider over `firstMonth` .. `lastMonth` with the month and year shown large, plus play and pause.
+- Playing advances one month about every 150 ms. The columns, the latest month panel and the
+  highlighted calendar cell all follow the slider.
+- Clicking a calendar cell moves the slider. Arrow keys step one month.
+
+### 15.4 Smoke layer
+A translucent grey cap over each 0.5 degree block that is smoky in the selected month (6.5), drawn
+above the columns. Before `meta.smoke.first_month` show a small label "No smoke data before November
+2015". A toggle turns the layer off. Default is on.
+
+### 15.5 Fallback
+- If WebGL is missing, the screen is narrower than 600 px, or the device reports reduced motion, show
+  a flat map: the same data as coloured squares, no pitch, no autoplay.
+- A visible switch lets the person choose 2D or 3D on any device.
+- Every number, sentence and download is identical in both modes.
+
+### 15.6 Demo mode (`?demo=1`)
+The page plays a fixed 30 second tour by itself, for the demo video. It uses the real page and the
+real data; nothing is faked. Controls are hidden, captions are large, and the tour ends on a still
+frame.
+
+| Seconds | On screen | Caption |
+|---|---|---|
+| 0 to 4 | Globe turns to Indonesia | Project name, team, challenge |
+| 4 to 12 | Slider runs 2002 to 2026, columns rise and fall | "Twenty-four years of hot spots, in one unit" |
+| 12 to 18 | Chart from 7.6: raw detections per satellite against the Aqua-equivalent line | "More satellites, not more fire" |
+| 18 to 25 | Fly to Riau, September 2019, smoke layer on, calendar visible | "Low counts under smoke are flagged, not trusted" |
+| 25 to 30 | Test result in one line, the site address | "Tested on hidden years" |
+
+- Captions are short English text from C. No voice is needed.
+- The tour is a list of timed steps in `demo.js` (time, camera, month, caption), so D can adjust it
+  without touching the rest.
+- Record on a desktop at 1920 by 1080, 60 frames per second, and trim to 30 seconds or less.
+- The tour must not start unless `?demo=1` is in the address.
+
+### 15.7 Done means, for this section
+- [ ] The same month gives the same numbers in 3D, in 2D and in the panels.
+- [ ] One fixed height scale with a legend.
+- [ ] Playing the slider is smooth on a desktop and does not freeze a phone (fallback takes over).
+- [ ] `?demo=1` runs start to finish with no input and takes 30 seconds or less.
+- [ ] Base map and library are cited.
