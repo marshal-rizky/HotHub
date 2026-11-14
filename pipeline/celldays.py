@@ -92,30 +92,31 @@ class Tables:
         return {cell: n for cell, n in hits.items() if n >= min_years}
 
 
-def write_tables(out_dir, tables, static):
+def write_tables(out_dir, tables, static=None, append=False):
+    """Write the three monthly tables (append=True adds rows to existing files) and, when given, the
+    static cell list."""
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    with (out_dir / "cellmonths.csv").open("w", newline="", encoding="utf-8") as fh:
-        w = csv.writer(fh)
-        w.writerow(["i", "j", "year", "month", *grid.CHANNELS])
-        for key in sorted(tables.cellmonths):
-            w.writerow([*key, *tables.cellmonths[key]])
-    with (out_dir / "blockmonths.csv").open("w", newline="", encoding="utf-8") as fh:
-        w = csv.writer(fh)
-        w.writerow(BLOCK_FIELDS)
-        for key in sorted(tables.blockmonths):
-            n_det, n_cd, frp, n_high = tables.blockmonths[key]
-            w.writerow([*key, n_det, n_cd, round(frp, 1), n_high])
-    with (out_dir / "satmonths.csv").open("w", newline="", encoding="utf-8") as fh:
-        w = csv.writer(fh)
-        w.writerow(["year", "month", "sat", "days"])
-        for key in sorted(tables.sat_days):
-            w.writerow([*key, len(tables.sat_days[key])])
-    with (out_dir / "static_cells.csv").open("w", newline="", encoding="utf-8") as fh:
-        w = csv.writer(fh)
-        w.writerow(["i", "j", "years"])
-        for (i, j), n in sorted(static.items()):
-            w.writerow([i, j, n])
+
+    def table(name, header, rows):
+        with (out_dir / name).open("a" if append else "w", newline="", encoding="utf-8") as fh:
+            w = csv.writer(fh)
+            if not append:
+                w.writerow(header)
+            w.writerows(rows)
+
+    table("cellmonths.csv", ["i", "j", "year", "month", *grid.CHANNELS],
+          ([*key, *tables.cellmonths[key]] for key in sorted(tables.cellmonths)))
+    table("blockmonths.csv", BLOCK_FIELDS,
+          ([*key, n_det, n_cd, round(frp, 1), n_high]
+           for key, (n_det, n_cd, frp, n_high) in sorted(tables.blockmonths.items())))
+    table("satmonths.csv", ["year", "month", "sat", "days"],
+          ([*key, len(tables.sat_days[key])] for key in sorted(tables.sat_days)))
+    if static is not None:
+        with (out_dir / "static_cells.csv").open("w", newline="", encoding="utf-8") as fh:
+            w = csv.writer(fh)
+            w.writerow(["i", "j", "years"])
+            w.writerows([i, j, n] for (i, j), n in sorted(static.items()))
 
 
 def read_cellmonths(path):
@@ -154,6 +155,24 @@ def parse_years(text):
     return set(range(int(a), int(b or a) + 1))
 
 
+def paths_by_year(root, region):
+    """{year: [cached day files of every source]}"""
+    out = defaultdict(list)
+    for source in fetch.LAYERS:
+        for path in sorted((Path(root) / region / source).glob("*.csv")):
+            out[int(path.name[:4])].append(path)
+    return out
+
+
+def year_tables(paths, exclude=()):
+    tables, n_rows = Tables(exclude=exclude), 0
+    for path in paths:
+        rows = fetch.read_rows(path)
+        tables.add_day(rows)
+        n_rows += len(rows)
+    return tables, n_rows
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--region", choices=sorted(grid.REGIONS), required=True)
@@ -161,29 +180,34 @@ def main():
     ap.add_argument("--out", default="data/out")
     ap.add_argument("--static-years", default="2012-2019",
                     help="years used to find persistent heat sources (training years only)")
+    ap.add_argument("--min-years", type=int, default=3)
     args = ap.parse_args()
-    paths = [p for source in fetch.LAYERS
-             for p in sorted((Path(args.root) / args.region / source).glob("*.csv"))]
-    # Pass 1 finds the persistent heat sources, pass 2 builds the tables without them in blockmonths.
-    first = Tables()
-    for path in paths:
-        first.add_day(fetch.read_rows(path))
-    static = first.static_cells(parse_years(args.static_years))
-    del first
-    tables, n_rows, n_files = Tables(exclude=static), 0, len(paths)
-    for path in paths:
-        rows = fetch.read_rows(path)
-        tables.add_day(rows)
-        n_rows += len(rows)
-    write_tables(Path(args.out) / args.region, tables, static)
-    years = sorted(tables.year_days)
-    print(f"{n_files} day files, {n_rows} detections -> {len(tables.cellmonths)} cell-months, "
-          f"{len(tables.blockmonths)} block-month-sat rows, {len(static)} static cells; "
-          f"years {years[0] if years else '-'}..{years[-1] if years else '-'}")
+    by_year = paths_by_year(args.root, args.region)
+    out_dir = Path(args.out) / args.region
+    # One year in memory at a time. Pass 1 (training years only) finds the persistent heat sources,
+    # pass 2 builds the tables with those cells left out of blockmonths.
+    hits = defaultdict(int)
+    for year in sorted(parse_years(args.static_years) & set(by_year)):
+        tables, _ = year_tables(by_year[year])
+        for cell in tables.static_cells(min_years=1):
+            hits[cell] += 1
+        print(f"static pass {year}: {len(hits)} candidate cells", flush=True)
+    static = {cell: n for cell, n in hits.items() if n >= args.min_years}
+    totals, months = [0, 0, 0, 0], defaultdict(list)
+    for k, year in enumerate(sorted(by_year)):
+        tables, n_rows = year_tables(by_year[year], exclude=static)
+        write_tables(out_dir, tables, static if k == 0 else None, append=k > 0)
+        for n, add in enumerate((len(by_year[year]), n_rows, len(tables.cellmonths), len(tables.blockmonths))):
+            totals[n] += add
+        for (y, m, sat) in tables.sat_days:
+            months[sat].append((y, m))
+        print(f"{year}: {n_rows} detections, {len(tables.cellmonths)} cell-months", flush=True)
+    print(f"{totals[0]} day files, {totals[1]} detections -> {totals[2]} cell-months, "
+          f"{totals[3]} block-month-sat rows, {len(static)} static cells")
     for sat in SATS:
-        months = sorted((y, m) for (y, m, s) in tables.sat_days if s == sat)
-        if months:
-            print(f"  {sat:4s} {months[0][0]}-{months[0][1]:02d} .. {months[-1][0]}-{months[-1][1]:02d} ({len(months)} months)")
+        span = sorted(months[sat])
+        if span:
+            print(f"  {sat:4s} {span[0][0]}-{span[0][1]:02d} .. {span[-1][0]}-{span[-1][1]:02d} ({len(span)} months)")
 
 
 if __name__ == "__main__":

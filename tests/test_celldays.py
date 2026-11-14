@@ -84,3 +84,26 @@ def test_excluded_cells_stay_in_cellmonths_but_leave_blockmonths():
     t.add_day([row(), row(lat=0.61)])
     assert t.cellmonths[(*a, 2015, 9)][grid.CH["vN_nominal"]] == 1
     assert t.blockmonths[(*grid.block_of(*a), 2015, 9, "N", "D")] == [1, 1, 4.0, 0]
+
+
+def test_write_tables_append_adds_rows_without_a_second_header(tmp_path):
+    first, second = celldays.Tables(), celldays.Tables()
+    first.add_day([row()])
+    second.add_day([row(date="2016-09-02")])
+    celldays.write_tables(tmp_path, first, {(5, 1005): 3})
+    celldays.write_tables(tmp_path, second, append=True)
+    assert {k[2] for k in celldays.read_cellmonths(tmp_path / "cellmonths.csv")} == {2015, 2016}
+    assert len(celldays.read_blockmonths(tmp_path / "blockmonths.csv")) == 2
+    assert celldays.read_satmonths(tmp_path / "satmonths.csv") == {(2015, 9, "N"): 1, (2016, 9, "N"): 1}
+    assert celldays.read_static_cells(tmp_path / "static_cells.csv") == {(5, 1005): 3}
+
+
+def test_paths_by_year_and_year_tables(tmp_path):
+    import fetch
+    fetch.write_rows(fetch.cache_path(tmp_path, "sea", "viirs_snpp", "2015-09-02"), [row()])
+    fetch.write_rows(fetch.cache_path(tmp_path, "sea", "modis", "2016-01-01"),
+                     [row(date="2016-01-01", family="modis", sat="A", conf=60)])
+    by_year = celldays.paths_by_year(tmp_path, "sea")
+    assert sorted(by_year) == [2015, 2016]
+    tables, n_rows = celldays.year_tables(by_year[2016])
+    assert n_rows == 1 and list(tables.sat_days) == [(2016, 1, "A")]

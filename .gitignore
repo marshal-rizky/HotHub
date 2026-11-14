@@ -2,6 +2,5 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .env
-# Data is large; it is rebuilt by the pipeline and published as a release asset.
-data/
-web/data/
+# Raw and intermediate data is large and is rebuilt by the pipeline. The web pack in web/data is tracked.
+/data/

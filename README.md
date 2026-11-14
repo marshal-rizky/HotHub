@@ -9,16 +9,40 @@ from VIIRS alone. The result of that test is reported as it is, pass or fail.
 
 This is work in progress. See [PLAN.md](PLAN.md) for what exists today.
 
+## Why
+
+Indonesian agencies publish different hot spot numbers for the same month, because each uses different
+satellites and confidence thresholds, and some add satellites together. Raw detections in our region
+doubled between 2015 and 2026 mainly because more VIIRS satellites fly, not because fires doubled.
+A count is only comparable over time when it is expressed in one unit. Details and sources are in
+[DESIGN.md](DESIGN.md), section 1.
+
+## Result so far
+
+First run on real data, 14 November 2026. Trained on 2012 to 2019, tested by hiding Aqua for 2020 to
+2022 and rebuilding it from Suomi NPP alone.
+
+| Model | Median log error | Interval coverage | Yearly total error | Verdict |
+|---|---|---|---|---|
+| Baseline, one ratio | 0.303 | 83% | +10% to +21% | reference |
+| Ratio per calendar month | 0.304 | 83% | +9% to +18% | fails C1 |
+| Fire-size curves | 0.270 | 84% | 0% to +10% | passes C1, C2, C3 |
+
+The pass criteria were fixed before the run. The pass on C1 is narrow. The record was not complete at
+the time, so these numbers will be replaced after the rerun. Limits are listed in DESIGN.md, 6.11.
+
 ## Layout
 
 | Path | What it holds |
 |---|---|
-| `pipeline/` | Python: fetch detections, build monthly tables, fit and test the harmonization |
+| `pipeline/` | Python: fetch detections and aerosol data, build monthly tables, fit and test the harmonization, write the pack |
 | `tests/` | Tests for the pipeline (`python -m pytest tests -q`) |
-| `web/` | The page (not written yet) |
+| `web/` | The page (not written yet) and its data pack in `web/data/` |
 | `data/` | Fetched data and outputs. Not in git; rebuilt by the pipeline |
 | [DESIGN.md](DESIGN.md) | What the challenge asks, data sources, method, pass criteria |
 | [PLAN.md](PLAN.md) | Schedule, status, submission checklist |
+| [TEAM.md](TEAM.md) | Who does what, in what order, and the hand-offs |
+| [PACK.md](PACK.md) | Format of the data pack the page reads |
 
 ## How to run
 
@@ -26,6 +50,8 @@ This is work in progress. See [PLAN.md](PLAN.md) for what exists today.
 python pipeline/fetch.py --region sea --source modis --start 2002-07-04 --end 2026-11-13 --newest-first
 python pipeline/celldays.py --region sea --static-years 2012-2019
 python pipeline/harmonize.py --region sea
+python pipeline/aod.py --region sea        # needs METEOMATICS_USER and METEOMATICS_PASS
+python pipeline/pack.py --region sea
 python -m pytest tests -q
 ```
 
