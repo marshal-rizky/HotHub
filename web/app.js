@@ -3,7 +3,7 @@ import * as c from './calc.js';
 import { loadPack } from './data.js';
 import { createMap, STEP_COLORS } from './map3d.js';
 import { runDemo } from './demo.js';
-import { icon, fillIcons } from './icons.js';
+import { icon, fillIcons, logo } from './icons.js';
 import { renderWhy, renderMethods, svg, niceMax, axes } from './explain.js';
 
 const $ = id => document.getElementById(id);
@@ -589,4 +589,5 @@ async function boot() {
   if (demo && map) runDemo({ pack, map, setMonth, setArea, presetDef, riau: PRESETS[1][2] });
 }
 
+$('logo').innerHTML = logo();
 boot();

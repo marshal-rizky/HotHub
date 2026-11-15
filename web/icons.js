@@ -47,3 +47,44 @@ export function icon(name) {
 export function fillIcons(root) {
   for (const el of root.querySelectorAll('[data-icon]')) el.innerHTML = icon(el.dataset.icon);
 }
+
+// The logo: a pixel globe that turns, hot spots that blink on its land, and a satellite in orbit that passes
+// in front of the globe and then behind it. Drawn on a 33 by 33 grid. Movement is CSS (style.css, ".logo").
+const LAND = [ // one turn of the globe, 24 wide: '#' land, 'o' a hot spot on land
+  '........................', '....###.........##......', '...#####.......####.....', '..###o##......######....',
+  '...####........##o#.....', '....##...###....##......', '.........####...........', '..........#o#......##...',
+  '...##.............####..', '..####....##.......#o#..', '.###o##..####.......#...', '..####...#####..........',
+  '...##.....#o#......##...', '..................####..', '.....###..........#o#...', '....##o##....##.........',
+  '.....###....####........', '.............##....##...', '..##..............###...', '.####...................',
+  '..##....................',
+];
+
+export function logo() {
+  const R = 10, C = 16; // globe radius and centre, in pixels
+  let disc = '', light = '', shade = '', land = '';
+  for (let dy = -R; dy <= R; dy++) {
+    const half = Math.floor(Math.sqrt((R + 0.5) ** 2 - dy * dy));
+    disc += `<rect x="${C - half}" y="${C + dy}" width="${half * 2 + 1}" height="1"/>`;
+    for (let dx = -half; dx <= half; dx++) {
+      if (Math.hypot(dx - 3, dy - 3) > 9.6) light += `<rect x="${C + dx}" y="${C + dy}" width="1" height="1"/>`;
+      if (Math.hypot(dx + 3, dy + 3) > 9.6) shade += `<rect x="${C + dx}" y="${C + dy}" width="1" height="1"/>`;
+    }
+  }
+  for (const shift of [0, 24]) {
+    LAND.forEach((row, y) => {
+      for (const run of row.matchAll(/[#o]+/g)) land += `<rect x="${C - R + shift + run.index}" y="${C - R + y}" width="${run[0].length}" height="1" fill="#3f9b4f"/>`;
+      for (const hot of row.matchAll(/o/g)) land += `<rect class="hot" x="${C - R + shift + hot.index}" y="${C - R + y}" width="1" height="1"/>`;
+    });
+  }
+  const sat = `<path class="sat" transform="translate(-2.7 -2.7) scale(0.6)" d="${iconPath('sat')}" fill="#f4f6fa"/>`;
+  return `<svg viewBox="0 0 33 33" shape-rendering="crispEdges" role="img" aria-label="HotHub logo: a satellite circling a globe">
+    <defs><clipPath id="lg-globe">${disc}</clipPath><clipPath id="lg-front"><rect x="0" y="16.5" width="33" height="17"/></clipPath></defs>
+    <path class="ring" d="M2 16.5a14.5 5 0 0 1 29 0"/>
+    <g class="orbit">${sat}</g>
+    <g fill="#1f5fa8">${disc}</g>
+    <g clip-path="url(#lg-globe)"><g class="land">${land}</g></g>
+    <g fill="#ffffff" opacity="0.16">${light}</g><g fill="#000000" opacity="0.3">${shade}</g>
+    <path class="ring" d="M2 16.5a14.5 5 0 0 0 29 0"/>
+    <g clip-path="url(#lg-front)"><g class="orbit">${sat}</g></g>
+  </svg>`;
+}

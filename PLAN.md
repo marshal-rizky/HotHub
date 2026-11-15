@@ -39,7 +39,7 @@ Done since: the web page (flat voxel map, calendar, month panel, date range and 
 demo mode), committed in `web/`. 24 web tests and 45 pipeline tests pass.
 
 Open: check on a real desktop and phone, confirm the public host, record the demo, slides, project page
-text, team name and product name. Details in [HANDOFF.md](HANDOFF.md) section 2 and section 7.
+text and team name. Details in [HANDOFF.md](HANDOFF.md) section 2 and section 7.
 
 Things that went wrong and what we changed:
 

@@ -244,3 +244,17 @@ body.demo .legend { display: none; }
 .verdicts { margin: 10px 0; }
 details.more { margin: 10px 0; }
 details.more summary { cursor: pointer; font: 700 0.85rem var(--mono); margin-bottom: 8px; }
+
+/* logo: turning pixel globe, blinking hot spots, satellite in orbit */
+.brand { display: flex; gap: 14px; align-items: center; }
+.logo { width: 72px; height: 72px; flex: none; }
+.logo svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.logo .ring { fill: none; stroke: var(--soft); stroke-width: 0.5; stroke-dasharray: 1 1.4; }
+.logo .orbit { offset-path: path('M2 16.5a14.5 5 0 1 0 29 0a14.5 5 0 1 0 -29 0'); offset-rotate: 0deg; animation: logo-orbit 6s linear infinite; }
+.logo .land { animation: logo-turn 16s steps(24) infinite; }
+.logo .hot { fill: #ff8a3d; animation: logo-blink 1s steps(1) infinite; }
+@keyframes logo-orbit { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes logo-turn { to { transform: translateX(-24px); } }
+@keyframes logo-blink { 50% { fill: #ffe08a; } }
+@media (prefers-reduced-motion: reduce) { .logo .orbit, .logo .land, .logo .hot { animation: none; } }
+@media (max-width: 600px) { .logo { width: 52px; height: 52px; } .brand { gap: 10px; } }

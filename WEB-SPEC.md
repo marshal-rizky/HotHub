@@ -462,6 +462,6 @@ was added, and every place where the page differs from the text above. Tests: `n
 
 - Real desktop screen, real phone, touch, and the smoothness of the animation were not checked.
 - Drawing a box and the CSV download by clicking were not exercised in a browser. The CSV text is tested.
-- The product name and the team name in the demo are placeholders. The explainer and methods wording is a draft
+- The team name in the demo is a placeholder. The product name is HotHub. The explainer and methods wording is a draft
   for person C.
 - Simple cards (haze now, fires in the last 24 hours) are not built.

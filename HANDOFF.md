@@ -98,7 +98,7 @@ House rules:
 
 ## 7. Open items
 
-- Product name is not confirmed. The page says "Harmonized Hot Spots" as a placeholder (`index.html`, `#project-name`).
+- Product name: **HotHub** (page title and heading in `index.html`, `#project-name`; the demo's first caption reads it from there). Confirm with the team before the slides and the project page use it.
 - Team name for the demo captions: `TEAM` in `web/demo.js` is empty.
 - Host: a GitHub Pages workflow (`.github/workflows/pages.yml`) deploys `web/` on every push to
   `main` that touches it. Pages must be switched on in the repository settings (source: GitHub
