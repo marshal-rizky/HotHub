@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Harmonized hot spots for Indonesia</title>
+  <meta name="description" content="One monthly hot spot count for Indonesia, 2002 to today, comparable across MODIS and VIIRS.">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/three.module.js", "three/addons/": "./vendor/three/addons/" } }
+  </script>
+</head>
+<body>
+  <header class="top">
+    <div>
+      <!-- Product name is not confirmed by the team yet (HANDOFF.md section 7). -->
+      <h1 id="project-name">Harmonized Hot Spots</h1>
+      <p class="tagline">One monthly hot spot count for Indonesia, 2002 to today, comparable across MODIS and VIIRS.</p>
+    </div>
+    <nav>
+      <a href="#why">Why numbers differ</a>
+      <a href="#methods">Methods</a>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <section class="map-col" aria-label="Map and area">
+      <div id="map" class="map">
+        <div class="map-month" id="map-month" aria-live="polite"></div>
+        <div class="map-tools">
+          <button type="button" id="btn-mode" aria-pressed="true">3D</button>
+          <button type="button" id="btn-top"><span data-icon="eye"></span>Top view</button>
+          <button type="button" id="btn-box" hidden><span data-icon="box"></span>Draw box</button>
+          <button type="button" id="btn-smoke" aria-pressed="true"><span data-icon="cloud"></span>Smoke</button>
+          <button type="button" id="btn-home"><span data-icon="home"></span>Reset view</button>
+          <button type="button" id="btn-fact"><span data-icon="sat"></span>Did you know?</button>
+        </div>
+        <div class="map-note" id="map-note" hidden></div>
+        <details class="legend" id="legend">
+          <summary><span data-icon="list"></span>Legend</summary>
+          <div class="legend-row"><span class="legend-title">Colour: compared with the same month in other years</span></div>
+          <div class="legend-row" id="legend-steps"></div>
+          <div class="legend-row small" id="legend-height"></div>
+          <div class="legend-row small"><span class="swatch static"></span> Persistent heat source, not counted
+</div>
+          <div class="legend-row small"><span class="swatch cloud"></span> Thick smoke</div>
+        </details>
+        <div class="tip" id="tip" hidden></div>
+        <div class="pin" id="pin" hidden></div>
+        <div class="caption" id="caption" hidden></div>
+        <div class="demo-side" id="demo-side" hidden></div>
+        <p class="map-fail" id="map-fail" hidden></p>
+      </div>
+
+      <div class="timebar">
+        <button type="button" id="btn-play" aria-label="Play"><span data-icon="play"></span></button>
+        <input type="range" id="slider" aria-label="Month" step="1">
+        <output id="slider-label" for="slider"></output>
+      </div>
+
+      <div class="area">
+        <div class="presets" id="presets" role="group" aria-label="Preset areas"></div>
+        <form id="point-form" class="point-form" novalidate>
+          <label>Latitude <input id="in-lat" inputmode="decimal" autocomplete="off" placeholder="e.g. -0.5"></label>
+          <label>Longitude <input id="in-lon" inputmode="decimal" autocomplete="off" placeholder="e.g. 101.5"></label>
+          <label>Radius (km) <input id="in-km" inputmode="decimal" autocomplete="off" value="25"></label>
+          <button type="submit"><span data-icon="search"></span>Show</button>
+        </form>
+        <p class="msg" id="area-msg" role="alert"></p>
+        <p class="area-info" id="area-info"></p>
+        <p class="hint">Click the map to choose a point, or click a pillar to read its cell. Preset boxes are rough, not exact borders.</p>
+      </div>
+    </section>
+
+    <section class="panel-col">
+      <div id="status" class="card status" role="status">Loading data</div>
+
+      <div id="panels" hidden>
+        <article class="card" id="month-panel" aria-live="polite"></article>
+
+        <article class="card" id="calendar-panel">
+          <h2>Monthly calendar</h2>
+          <div class="cal-scroll"><table class="cal" id="cal"></table></div>
+          <p class="cal-info" id="cal-info">Hover or tap a month.</p>
+          <div class="cal-legend" id="cal-legend"></div>
+        </article>
+
+        <article class="card" id="range-panel">
+          <h2>Date range and download</h2>
+          <div class="range-pick">
+            <label>From <select id="sel-from"></select></label>
+            <label>To <select id="sel-to"></select></label>
+          </div>
+          <div id="range-cards" class="stats"></div>
+          <div id="chart" class="chart"></div>
+          <p id="range-sum"></p>
+          <button type="button" id="btn-csv"><span data-icon="download"></span>Download CSV</button>
+          <p class="small" id="csv-note"></p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <section class="wide card" id="why">
+    <h2>Why our number differs from official figures</h2>
+    <div id="why-comic"></div>
+    <div id="why-chart" class="chart"></div>
+    <!-- PLACEHOLDER: final wording comes from person C. The cards below only restate DESIGN.md section 1. -->
+    <div class="why-cards">
+      <div class="why-card"><span data-icon="eye"></span><strong>One fixed threshold</strong>
+        <span>Aqua MODIS, confidence 30 or higher. VIIRS months are converted to that unit.</span></div>
+      <div class="why-card"><span data-icon="sat"></span><strong>Satellites never added together</strong>
+        <span>Each one is kept apart, so a new launch cannot inflate the count.</span></div>
+      <div class="why-card"><span data-icon="pin"></span><strong>Always-hot places left out</strong>
+        <span>Gas flares, smelters and volcanoes are hot every day and are not fires.</span></div>
+      <div class="why-card"><span data-icon="question"></span><strong>Agencies disagree</strong>
+        <span>August 2026, high confidence: 9,409 (SiPongi+) and 9,587 (BRIN). Source: Kompas, 7 September 2026.</span></div>
+    </div>
+  </section>
+
+  <section class="wide card" id="methods">
+    <h2>Methods</h2>
+    <div id="methods-body"></div>
+    <!-- PLACEHOLDER: surrounding text comes from person C. -->
+  </section>
+
+  <footer class="wide foot">
+    <p><strong>Data.</strong> NASA GIBS: VIIRS (Suomi NPP, NOAA-20, NOAA-21) and MODIS (Aqua, Terra) Thermal Anomalies; Blue Marble
+      Shaded Relief and Bathymetry (base map). Meteomatics: aerosol optical depth at 550 nm (smoke flag).</p>
+    <p><strong>Code and design.</strong> three.js (MIT licence) for the map. Colour steps from ColorBrewer (OrRd) by Cynthia Brewer.
+      System fonts only.</p>
+    <p><strong>Other figures.</strong> Damage and burned-area figures for 2015 and 2019: World Bank, The Cost of Fire (2016), and
+      Indonesia Economic Quarterly, December 2019. City and island sizes are rounded.</p>
+    <p><strong>AI use.</strong> Code and documents were written with the help of an AI coding assistant (Claude, through Claude Code),
+      directed and reviewed by the team. The small pixel icons are grids drawn in code with that assistant; no image on this page comes
+      from an image generator.</p>
+    <p>Hot spots are heat anomalies seen by satellite, not confirmed fires. This page reports what the sensors saw; it does not say
+      who lit a fire or why. <a href="https://github.com/marshal-rizky/NASA">Source repository</a></p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
