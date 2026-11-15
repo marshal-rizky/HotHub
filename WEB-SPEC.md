@@ -7,6 +7,10 @@ numbers are in [DESIGN.md](DESIGN.md). Where this file and PACK.md disagree, tel
 self-playing demo mode for the 30 second video. Section 15 describes both and overrides the map
 details in sections 3, 5 and 7.2. Everything about numbers (sections 6, 8, 10, 14) is unchanged.
 
+**Revised 15 November:** the page is built, and the map is a flat voxel map, not a globe. **Section 16
+says what was built and where it differs from this text. Where section 16 and an earlier section
+disagree, section 16 is right.**
+
 ## 1. Outcome
 
 One static page where a person picks an area in Indonesia and sees, for that area:
@@ -39,11 +43,11 @@ A judge should be able to open the link, click the map once, and understand the 
 | `web/calc.js` | Pure functions only: no DOM, no fetch. Everything in section 6 |
 | `web/data.js` | Loads the four JSON files and builds the cell index |
 | `web/app.js` | Map, events, rendering |
-| `web/vendor/` | MapLibre GL JS (JS and CSS), copied in, with its licence file |
+| `web/vendor/` | three.js, copied in, with its licence file (changed from MapLibre GL JS, see section 16) |
 | `web/map3d.js`, `web/demo.js` | The 3D map layer and the demo tour (section 15) |
 | `web/tests/calc.test.mjs` | Tests for `calc.js`, run with `node --test web/tests` |
 
-Map: MapLibre GL JS, globe projection (section 15). Keep the attribution of the base map visible.
+Map: three.js, flat voxel map (section 16). Keep the attribution of the base map visible.
 
 ## 4. Data loading
 
@@ -298,6 +302,8 @@ Use these to check your code. Area: the whole box.
 
 ## 15. 3D map, time slider and demo mode
 
+> The globe described here was replaced by a flat voxel map on 15 November. Read section 16 first.
+
 The map is the centre of the page. Numbers stay in flat panels beside it: a calendar, a median and a
 CSV file are read and compared, and 3D makes that harder. The map answers "where and how much"; the
 panels answer "exactly how many, and is that normal".
@@ -368,3 +374,94 @@ frame.
 - [ ] Playing the slider is smooth on a desktop and does not freeze a phone (fallback takes over).
 - [ ] `?demo=1` runs start to finish with no input and takes 30 seconds or less.
 - [ ] Base map and library are cited.
+
+## 16. As built (15 November)
+
+The page follows sections 1 to 14 for everything about numbers. This section lists the files, the map, what
+was added, and every place where the page differs from the text above. Tests: `node --test web/tests`
+(24 pass; `web/tests/package.json` is needed so Node 24 finds the test file).
+
+### 16.1 Files
+
+| File | Holds |
+|---|---|
+| `web/index.html`, `web/style.css` | Markup and styles. Dark and light follow the device setting |
+| `web/calc.js` | Pure functions: month index, area selection, series, interval, normal, smoke, the sentence table, CSV, rank, year totals, cells with heat and the ground they cover, smoke days, comparison with a familiar place |
+| `web/data.js` | Loads the pack, builds the cell and block indexes and the per-month lists the map draws |
+| `web/app.js` | Events and rendering: area controls, month panel, calendar, date range, CSV, pin and tooltip |
+| `web/map3d.js` | The map (three.js): ground, pillars, smoke, markers, camera, picking, the satellite |
+| `web/explain.js` | "Why our number differs" (comic and chart) and "Methods" (gauges and table) |
+| `web/icons.js` | Pixel icons, each a 9 by 9 grid turned into inline SVG |
+| `web/demo.js` | The 30 second tour for `?demo=1` |
+| `web/vendor/three/` | three.js 0.187.0 (MIT) with its licence: core, module, MapControls, OrbitControls |
+| `web/tests/calc.test.mjs` | Tests of `calc.js` |
+
+### 16.2 Map
+
+- A flat diorama, 3D by default and flat on phones narrower than 600 px or with reduced motion. One switch
+  changes between 3D and 2D; the numbers are identical in both.
+- Ground: NASA GIBS Blue Marble Shaded Relief and Bathymetry tiles (zoom 5), sampled once to one colour per
+  0.1 degree square, so the whole map is pixel art. Land squares are raised blocks.
+- One pillar per 0.1 degree cell for the selected month. Height uses one square-root scale for the whole
+  record (tallest cell in the record is the maximum). Colour is the five-step ColorBrewer OrRd scale: a cell
+  ranked against the same calendar month in other years, with months missing from the pack counted as zero.
+- Zoomed out (camera farther than 16 units) the cells merge into 0.5 degree blocks. A block pillar shows the
+  mean per cell, so the same height scale still applies.
+- Pillars move with a spring when the month changes. Sparks rise above the top colour step. Smoke is two small
+  cloud puffs per smoky 0.5 degree block. The sea glints. All of this stops with reduced motion.
+- Persistent heat sources are flat grey markers, never pillars.
+- The camera is limited to the region box. A satellite hovers over central Indonesia at a fixed place in the
+  scene (it does not follow the camera). Hover, tap or the "Did you know?" button shows a fact: the first is
+  about smoke, after that at random, never the same twice in a row.
+- A click on a pillar opens a card with the verdict, value, source, interval, normal and smoke state for that
+  cell (a block when zoomed out); "Show in panels" makes the cell the chosen area. A click on bare ground
+  sets a point with the radius field. In top view a box can be drawn.
+
+### 16.3 Month panel and calendar
+
+- The month panel leads with a coloured verdict banner using the sentence table of section 6.6, then the
+  count, a bar from zero (usual range, median, this month, and the 80% interval for an estimate), fact chips
+  ("3rd highest October of 25", "highest since 2015", times the median), a bar chart of the same calendar
+  month in every year, and two badges (source and smoke) that open a plain explanation. A Simple and a Detail
+  view switch is remembered in the browser. The fact chips are left out when smoke may have hidden fires.
+- "In real life": hot spots a day, how many map squares had heat and the ground they cover compared with a
+  familiar place, thick-smoke days in the worst-hit part of the area, share of the worst month in the record,
+  and, for the fire season of 2015 and 2019 only, the World Bank damage figure with a link. All of these
+  except the two World Bank figures are counted from the pack. Hot spots are never turned into hectares
+  burned, deaths or money.
+- The calendar has a year-total bar at the end of each row (striped when the year is incomplete). Hover or
+  focus a cell shows the verdict and one short sentence.
+- The date range panel has three cards (highest month, highest year, lowest year; years are compared only
+  when all twelve months have data), the line chart with the interval drawn on estimated months, and the CSV
+  button.
+
+### 16.4 Explainer and methods (replace 7.6 and 7.7)
+
+- "Why our number differs": a four-panel pixel comic (an illustration, labelled as such), then the chart from
+  `region.json` with a rocket marking the year each VIIRS satellite first appears, then four fact cards.
+- "Methods": four step cards (learn, hide, rebuild, compare), one gauge per criterion with a pass line and one
+  row per model, a verdict list that states the narrow C1 pass and the failed model, and the full table in a
+  fold. Every number comes from `meta.test` and `meta.criteria_definition`.
+
+### 16.5 Differences from the text above
+
+| Section | Spec | As built |
+|---|---|---|
+| 3, 15.1 | MapLibre globe | three.js flat voxel map |
+| 4 | Map usable while data loads | Map appears after the data is loaded |
+| 5 | Preset boxes, typed point, click | Same, plus a drawn box in top view. Clicking a pillar picks that cell |
+| 7.3 | Latest month panel with raw numbers | Verdict first, numbers behind a Detail view (16.3) |
+| 7.6, 7.7 | Chart and a methods table | Comic, chart and gauges (16.4); the table is kept in a fold |
+| 15.2 | Hot spot columns | Same, with the zoomed-out block mean (16.2) |
+| 15.4 | Translucent cap over each smoky block | Cloud puffs over each smoky block |
+| 15.5 | Without WebGL, a flat map of coloured squares | Without WebGL, a text message; presets, typed coordinates, calendar and download still work |
+| 15.6 | Demo tour | Built in `demo.js`; its steps differ from the table only in timing and the satellite is not used |
+| (new) | - | Satellite facts, "In real life", Simple and Detail view, year totals, summary cards |
+
+### 16.6 Not done or not checked
+
+- Real desktop screen, real phone, touch, and the smoothness of the animation were not checked.
+- Drawing a box and the CSV download by clicking were not exercised in a browser. The CSV text is tested.
+- The product name and the team name in the demo are placeholders. The explainer and methods wording is a draft
+  for person C.
+- Simple cards (haze now, fires in the last 24 hours) are not built.

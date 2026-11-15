@@ -1,4 +1,4 @@
-# Hand-off: state of the work on 14 November 2026, evening
+# Hand-off: state of the work on 15 November 2026
 
 Read this first when you pick the project up on another machine or in a new session. It says what is
 done, what is decided and why, what is not in git, and what to do next. Details are in the linked
@@ -13,22 +13,29 @@ files; this file only carries what those files do not say.
 | Harmonization (`pipeline/harmonize.py`) | Done. Size model passes all three criteria on hidden years 2020 to 2022 |
 | Smoke flag (`pipeline/aod.py`) | Done. 132 months from 21 November 2015 |
 | Data pack (`pipeline/pack.py`) | Done and committed: `web/data/sea/` (6 MB, 1.7 MB gzipped, 20,552 cells) |
-| Tests | 45 pass: `python -m pytest tests -q` |
-| Web page | **Not started.** `web/` holds only the data pack |
-| Hosting, slides or video, project page text | Not started |
+| Tests | 45 pipeline tests: `python -m pytest tests -q`. 24 web tests: `node --test web/tests` |
+| Web page | **Built and committed** in `web/` (commit 8d5d157). See WEB-SPEC.md section 16 for what it does and where it differs from the spec |
+| Hosting | The Pages workflow is committed; not confirmed live |
+| Slides or video, project page text | Not started. `?demo=1` plays the 30 second tour on the real page; it still has to be recorded |
 
 Deadlines (WIB): first submission Sunday 15 November 15:00, freeze 18:00, hard deadline 23:59.
 
 ## 2. Next step
 
-Build the web page from [WEB-SPEC.md](WEB-SPEC.md) and [PACK.md](PACK.md). The page needs **only**
-the committed pack in `web/data/sea/`. It does not need the raw data, the pipeline, Python or any key.
+The page is built. What is left, in order:
 
-Order (WEB-SPEC section 11): numbers right on a flat map first, then calendar, chart and download,
-then the 3D layer (section 15), then demo mode `?demo=1` for the 30 second video.
+1. Look at it on a real desktop screen and a real phone. The build was checked in a small preview pane and
+   on emulated phone widths only. Smoothness of the animation and real touch use were not judged.
+2. Confirm that the public host serves it (Settings, Pages, source GitHub Actions) and open the link in a
+   private window.
+3. Put the team name in `TEAM` at the top of `web/demo.js`, record `?demo=1` at 1920 by 1080 and trim to 30
+   seconds or less.
+4. Person C: replace the draft wording in "Why our number differs" and "Methods", and the references.
+5. Slides, project page text and the AI-use declaration ([TEAM.md](TEAM.md)).
 
-Check every number against WEB-SPEC section 14 (reference values from the real pack) before adding
-anything visual.
+The page needs **only** the committed pack in `web/data/sea/`. It does not need the raw data, the pipeline,
+Python or any key. Check any number you change against WEB-SPEC section 14 (reference values from the real
+pack).
 
 ## 3. Decisions already made (do not reopen without a reason)
 
@@ -43,7 +50,9 @@ anything visual.
 | Smoke flag fails closed | A low count under heavy smoke is shown as "not trusted", never as "below normal" |
 | Persistent heat sources removed, never named | 17 cells; the page names no facility or company |
 | Static page, no server, no key in the browser | Works on any host and cannot leak a credential |
-| 3D globe for the map, flat panels for numbers | The map shows where and how much; exact numbers must stay readable and comparable |
+| Flat voxel map (one pillar per cell), flat panels for numbers | Changed from a 3D globe on 14 November: simpler, no globe risk, and it reads as the same map in the video. The map shows where and how much; exact numbers stay in the panels |
+| three.js, not MapLibre | The pillars, clouds and sparks are cheap instanced meshes; the base map is Blue Marble tiles sampled once into pixels |
+| Month panel leads with a verdict, then a picture, then numbers; a Simple and a Detail view | A reader should not have to compare numbers to know whether a month is unusual. The smoke rule is unchanged |
 | One fixed height scale on the map | Rescaling per view would make quiet months look like disasters |
 | Demo video is the real page in `?demo=1`, screen-recorded | Nothing is faked; no AI video is used |
 
@@ -89,14 +98,22 @@ House rules:
 
 ## 7. Open items
 
-- Product name is not confirmed. Ask the team before it goes on the page.
+- Product name is not confirmed. The page says "Harmonized Hot Spots" as a placeholder (`index.html`, `#project-name`).
+- Team name for the demo captions: `TEAM` in `web/demo.js` is empty.
 - Host: a GitHub Pages workflow (`.github/workflows/pages.yml`) deploys `web/` on every push to
   `main` that touches it. Pages must be switched on in the repository settings (source: GitHub
   Actions). Not yet confirmed live.
-- NASA GIBS Blue Marble as base map is untested (WEB-SPEC 15.1 gives the fallback).
+- NASA GIBS Blue Marble base map works (tiles are fetched in the browser at zoom 5 and sampled to one colour per
+  0.1 degree cell). If the tiles fail to load within 8 seconds, the page draws land where the record ever saw a
+  hot spot, which is patchy.
 - NOAA-20 standby through Suomi NPP (for the day Aqua and Suomi NPP stop) is described in DESIGN.md
   but not built. Cut it if time is short.
 - Project page text, slides or video, references list: person C and D ([TEAM.md](TEAM.md)).
+- Person C: the 2019 figure links to a CNBC report of the World Bank estimate; replace it with the World Bank
+  document itself. The explainer cards and the methods text around the gauges are drafts.
+- Whether code-drawn pixel icons and comic panels need a watermark under the AI-image rule is a team decision.
+  The footer says they were drawn in code with the assistant.
+- Not built: simple cards (haze now, fires in the last 24 hours), Landsat cross-check, NOAA-20 standby.
 
 ## 8. File map
 
@@ -105,6 +122,6 @@ House rules:
 | [README.md](README.md) | What the project is, results table, how to run |
 | [DESIGN.md](DESIGN.md) | Method, results, limits, weak points of existing tools |
 | [PACK.md](PACK.md) | Format of the data pack and how the page computes from it |
-| [WEB-SPEC.md](WEB-SPEC.md) | Full specification of the web page, including the 3D map and demo mode |
+| [WEB-SPEC.md](WEB-SPEC.md) | Specification of the web page, including the demo mode; section 16 says what was built |
 | [TEAM.md](TEAM.md) | Who does what, hand-offs, cut list |
 | [PLAN.md](PLAN.md) | Schedule and submission checklist |

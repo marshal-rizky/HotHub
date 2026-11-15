@@ -31,7 +31,15 @@ Done:
 
 Tried and failed: direct NOAA-20 calibration (fails C1, see DESIGN.md 6.11).
 
-Not done yet: the web page, deploy, slides, project page text.
+Not done yet at that time: the web page, deploy, slides, project page text.
+
+## Status on 15 November
+
+Done since: the web page (flat voxel map, calendar, month panel, date range and CSV, explainer, methods,
+demo mode), committed in `web/`. 24 web tests and 45 pipeline tests pass.
+
+Open: check on a real desktop and phone, confirm the public host, record the demo, slides, project page
+text, team name and product name. Details in [HANDOFF.md](HANDOFF.md) section 2 and section 7.
 
 Things that went wrong and what we changed:
 
